@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esko UTM Generator 2026</title>
+    <style>
+        :root {
+            --esko-gray: #444B53;
+            --esko-gray-dark: #2f353b;
+            --esko-gray-light: #f4f6f6;
+            --esko-green: #A6C044;
+            --esko-green-dark: #8faa31;
+            --esko-green-soft: rgba(166, 192, 68, 0.16);
+            --border: #d8dddd;
+            --text: #293038;
+            --muted: #66717c;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(166, 192, 68, 0.28), transparent 34%),
+                linear-gradient(135deg, var(--esko-gray-dark) 0%, var(--esko-gray) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+            padding: 40px;
+            border-top: 10px solid var(--esko-green);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 220px;
+            height: 220px;
+            background: var(--esko-green-soft);
+            border-radius: 0 0 0 220px;
+            pointer-events: none;
+        }
+
+        h1 {
+            color: var(--esko-gray);
+            margin-bottom: 10px;
+            font-size: 32px;
+            letter-spacing: -0.03em;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 72px;
+            height: 5px;
+            background: var(--esko-green);
+            border-radius: 999px;
+            margin-top: 14px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 30px;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--esko-gray);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+            color: var(--text);
+            background: var(--white);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--esko-green);
+            box-shadow: 0 0 0 4px var(--esko-green-soft);
+        }
+
+        .optional {
+            color: #8b969f;
+            font-weight: 400;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-generate {
+            background: var(--esko-green);
+            color: var(--esko-gray-dark);
+        }
+
+        .btn-generate:hover {
+            background: var(--esko-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(166, 192, 68, 0.35);
+        }
+
+        .btn-copy {
+            background: var(--esko-gray);
+            color: var(--white);
+            display: none;
+        }
+
+        .btn-copy:hover {
+            background: var(--esko-gray-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(68, 75, 83, 0.28);
+        }
+
+        .btn-copy.show {
+            display: block;
+        }
+
+        .btn-reset {
+            background: var(--esko-gray-light);
+            color: var(--esko-gray);
+            border: 2px solid var(--border);
+        }
+
+        .btn-reset:hover {
+            background: #e8ecec;
+            border-color: #c6cccc;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--esko-gray-light);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            border-left: 6px solid var(--esko-green);
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-label {
+            font-weight: 700;
+            color: var(--esko-gray);
+            margin-bottom: 10px;
+        }
+
+        .result-url {
+            background: var(--white);
+            padding: 16px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--esko-gray);
+            color: var(--white);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            font-weight: 700;
+            border-left: 6px solid var(--esko-green);
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dynamic-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            .container {
+                padding: 24px;
+                border-top-width: 8px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .dynamic-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Esko UTM Generator 2026</h1>
+        <p class="subtitle">Generate tracking URLs with Esko UTM Standard Parameters - Last update May 29 2026. For questions or updates, please contact Frederico Melo.</p>
+
+        <form id="utmForm">
+            <div class="form-group">
+                <label for="baseUrl">Base URL *</label>
+                <input type="url" id="baseUrl" placeholder="https://example.com/page" required>
+            </div>
+
+            <div class="form-group">
+                <label for="webActivity">Web Activity *</label>
+                <select id="webActivity" required>
+                    <option value="">-- Select Activity --</option>
+                    <option value="ppc_google_ads">PPC (Google Ads)</option>
+                    <option value="ppc_linkedin_ads">PPC (LinkedIn Ads)</option>
+                    <option value="seo">SEO</option>
+                    <option value="organic_social_linkedin">Organic Social - Linkedin</option>
+                    <option value="organic_social_instagram">Organic Social - Instagram</option>
+                    <option value="organic_social_facebook">Organic Social - Facebook</option>
+                    <option value="organic_social_tiktok">Organic Social - TikTok</option>
+                    <option value="organic_social_reddit">Organic Social - Reddit</option>
+                    <option value="organic_social_youtube">Organic Social - YouTube</option>
+                    <option value="organic_social_packaging_pulse">Organic Social - Packaging Pulse</option>
+                    <option value="organic_social_final_proof">Organic Social - Final Proof</option>
+                    <option value="free_software">Free Software</option>
+                    <option value="trial_software">Trial Software</option>
+                    <option value="inbound_emails">Inbound Emails</option>
+                    <option value="nurturing_emails_generic">Nurturing Emails Generic</option>
+                    <option value="nurturing_emails_trials">Nurturing Emails Trials</option>
+                    <option value="nurturing_emails_product">Nurturing Emails Product</option>
+                    <option value="outbound_emails_brands_outreach">Outbound Emails Brands Outreach</option>
+                    <option value="outbound_emails_brands_event">Outbound Emails Brands Event</option>
+                    <option value="outbound_emails_brands_webinar">Outbound Emails Brands Webinar</option>
+                    <option value="outbound_emails_brands_launch">Outbound Emails Brands Launch</option>
+                    <option value="outbound_emails_brands_announcement">Outbound Emails Brands Announcement</option>
+                    <option value="outbound_emails_suppliers_outreach">Outbound Emails Suppliers Outreach</option>
+                    <option value="outbound_emails_suppliers_event">Outbound Emails Suppliers Event</option>
+                    <option value="outbound_emails_suppliers_webinar">Outbound Emails Suppliers Webinar</option>
+                    <option value="outbound_emails_suppliers_launch">Outbound Emails Suppliers Launch</option>
+                    <option value="outbound_emails_suppliers_announcement">Outbound Emails Suppliers Announcement</option>
+                    <option value="outbound_emails_digital_marketing_upsell">Outbound Emails Digital Marketing Upsell</option>
+                    <option value="outbound_emails_digital_marketing_crosssell">Outbound Emails Digital Marketing Crosssell</option>
+                </select>
+            </div>
+
+            <div id="dynamicFields"></div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-generate">Generate UTM URL</button>
+                <button type="button" class="btn-copy" id="copyBtn">Copy URL</button>
+                <button type="button" class="btn-reset" id="resetBtn">Reset</button>
+            </div>
+        </form>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-label">Generated URL:</div>
+            <div class="result-url" id="resultUrl"></div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copyNotification">✓ URL copied to clipboard!</div>
+
+    <script>
+        const utmConfig = {
+            "ppc_google_ads": {
+                        "source": "ppc",
+                        "medium": "cpc",
+                        "campaign": {
+                                    "label": "Campaign Name",
+                                    "placeholder": "GADS_campaign_name"
+                        },
+                        "term": {
+                                    "label": "Keyword",
+                                    "placeholder": "keyword"
+                        },
+                        "content": {
+                                    "label": "Ad Group",
+                                    "placeholder": "adgroup"
+                        }
+            },
+            "ppc_linkedin_ads": {
+                        "source": "linkedin_paid",
+                        "medium": "cpc",
+                        "campaign": {
+                                    "label": "Campaign Name",
+                                    "placeholder": "LIADS_campaign_name"
+                        },
+                        "term": {
+                                    "label": "Keyword",
+                                    "placeholder": "keyword"
+                        },
+                        "content": {
+                                    "label": "Ad Group",
+                                    "placeholder": "adgroup"
+                        }
+            },
+            "seo": {
+                        "source": "google",
+                        "medium": "organic",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "seo"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Landing Page",
+                                    "placeholder": "landing_page"
+                        }
+            },
+            "organic_social_linkedin": {
+                        "source": "linkedin",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "organic_social"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Post Name",
+                                    "placeholder": "post_name"
+                        }
+            },
+            "organic_social_instagram": {
+                        "source": "instagram",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "organic_social"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Post Name",
+                                    "placeholder": "post_name"
+                        }
+            },
+            "organic_social_facebook": {
+                        "source": "facebook",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "organic_social"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Post Name",
+                                    "placeholder": "post_name"
+                        }
+            },
+            "organic_social_tiktok": {
+                        "source": "tiktok",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "organic_social"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Post Name",
+                                    "placeholder": "post_name"
+                        }
+            },
+            "organic_social_reddit": {
+                        "source": "reddit",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "organic_social"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Post Name",
+                                    "placeholder": "post_name"
+                        }
+            },
+            "organic_social_youtube": {
+                        "source": "youtube",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "video_title"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Video Title",
+                                    "placeholder": "video_title"
+                        }
+            },
+            "organic_social_packaging_pulse": {
+                        "source": "linkedin",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "esko_newsletter_generic"
+                        },
+                        "term": null,
+                        "content": null
+            },
+            "organic_social_final_proof": {
+                        "source": "linkedin",
+                        "medium": "social",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "esko_newsletter_artwork"
+                        },
+                        "term": null,
+                        "content": null
+            },
+            "free_software": {
+                        "source": "website",
+                        "medium": "free_tool",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "free_software"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Tool Name",
+                                    "placeholder": "tool_name"
+                        }
+            },
+            "trial_software": {
+                        "source": "website",
+                        "medium": "trial",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "trial_signup"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Product Name",
+                                    "placeholder": "product_name"
+                        }
+            },
+            "inbound_emails": {
+                        "source": "email_inbound",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "contact_us / demo"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "CTA Name",
+                                    "placeholder": "cta_name"
+                        }
+            },
+            "nurturing_emails_generic": {
+                        "source": "pardot",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "nurture_generic_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "email_number (e.g email_01)"
+                        }
+            },
+            "nurturing_emails_trials": {
+                        "source": "pardot",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "nurture_trial_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "email_number (e.g email_02)"
+                        }
+            },
+            "nurturing_emails_product": {
+                        "source": "pardot",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign",
+                                    "placeholder": "nurture_product_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "email_number (e.g email_03)"
+                        }
+            },
+            "outbound_emails_brands_outreach": {
+                        "source": "email_brands",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "outreach_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_brands_event": {
+                        "source": "email_brands",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "event_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_brands_webinar": {
+                        "source": "email_brands",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "webinar_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor* (e.g. email_02_reminder)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_brands_launch": {
+                        "source": "email_brands",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "launch_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor* (e.g. email_02_reminder)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_brands_announcement": {
+                        "source": "email_brands",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "announcement_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor* (e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_suppliers_outreach": {
+                        "source": "email_suppliers",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "outreach_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_suppliers_event": {
+                        "source": "email_suppliers",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "event_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_suppliers_webinar": {
+                        "source": "email_suppliers",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "webinar_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_suppliers_launch": {
+                        "source": "email_suppliers",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "launch_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_suppliers_announcement": {
+                        "source": "email_suppliers",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "announcement_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor *(e.g. email_02_followup)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_digital_marketing_upsell": {
+                        "source": "email_marketing",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "upsell_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor* (e.g. email_02_prepress_manager)",
+                                    "optional": true
+                        }
+            },
+            "outbound_emails_digital_marketing_crosssell": {
+                        "source": "email_marketing",
+                        "medium": "email",
+                        "campaign": {
+                                    "label": "Campaign Descriptor",
+                                    "placeholder": "crosssell_descriptor"
+                        },
+                        "term": null,
+                        "content": {
+                                    "label": "Email Number / Descriptor",
+                                    "placeholder": "optional / email_number_descriptor* (e.g. email_02_prepress_manager)",
+                                    "optional": true
+                        }
+            }
+};
+
+        const webActivitySelect = document.getElementById('webActivity');
+        const dynamicFields = document.getElementById('dynamicFields');
+        const form = document.getElementById('utmForm');
+        const resultSection = document.getElementById('resultSection');
+        const resultUrl = document.getElementById('resultUrl');
+        const copyBtn = document.getElementById('copyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const copyNotification = document.getElementById('copyNotification');
+
+        webActivitySelect.addEventListener('change', function() {
+            const selectedActivity = this.value;
+            dynamicFields.innerHTML = '';
+            
+            if (selectedActivity && utmConfig[selectedActivity]) {
+                const config = utmConfig[selectedActivity];
+                const fieldsHTML = [];
+
+                if (config.campaign) {
+                    fieldsHTML.push(createField('campaign', config.campaign));
+                }
+                if (config.term) {
+                    fieldsHTML.push(createField('term', config.term));
+                }
+                if (config.content) {
+                    fieldsHTML.push(createField('content', config.content));
+                }
+
+                dynamicFields.innerHTML = `<div class="dynamic-inputs">${fieldsHTML.join('')}</div>`;
+            }
+        });
+
+        function createField(name, config) {
+            const optionalText = config.optional ? '<span class="optional">(optional)</span>' : '';
+            const requiredAttr = config.optional ? '' : 'required';
+            const displayLabel = config.label || `utm_${name}`;
+            return `
+                <div class="form-group">
+                    <label for="utm_${name}">${displayLabel} ${optionalText}</label>
+                    <input type="text" id="utm_${name}" placeholder="${config.placeholder}" ${requiredAttr}>
+                </div>
+            `;
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const selectedActivity = webActivitySelect.value;
+            
+            if (!baseUrl || !selectedActivity) return;
+
+            const config = utmConfig[selectedActivity];
+            const url = new URL(baseUrl);
+            
+            url.searchParams.set('utm_source', config.source);
+            url.searchParams.set('utm_medium', config.medium);
+            
+            const campaignInput = document.getElementById('utm_campaign');
+            if (campaignInput && campaignInput.value.trim()) {
+                url.searchParams.set('utm_campaign', campaignInput.value.trim());
+            }
+            
+            const termInput = document.getElementById('utm_term');
+            if (termInput && termInput.value.trim()) {
+                url.searchParams.set('utm_term', termInput.value.trim());
+            }
+            
+            const contentInput = document.getElementById('utm_content');
+            if (contentInput && contentInput.value.trim()) {
+                url.searchParams.set('utm_content', contentInput.value.trim());
+            }
+            
+            resultUrl.textContent = url.toString();
+            resultSection.classList.add('show');
+            copyBtn.classList.add('show');
+            
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        copyBtn.addEventListener('click', function() {
+            const urlText = resultUrl.textContent;
+            navigator.clipboard.writeText(urlText).then(() => {
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            });
+        });
+
+        resetBtn.addEventListener('click', function() {
+            form.reset();
+            dynamicFields.innerHTML = '';
+            resultSection.classList.remove('show');
+            copyBtn.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
