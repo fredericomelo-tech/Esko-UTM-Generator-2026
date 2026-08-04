@@ -261,7 +261,7 @@
 <body>
     <div class="container">
         <h1>🎯 Esko UTM Generator 2026</h1>
-        <p class="subtitle">Generate tracking URLs with Esko UTM Standard Parameters - Last update May 29 2026. For questions or updates, please contact Frederico Melo.</p>
+        <p class="subtitle">Generate tracking URLs with Esko UTM Standard Parameters - Last Update - July 2026. For questions or updates, please contact Frederico Melo.</p>
 
         <form id="utmForm">
             <div class="form-group">
@@ -713,7 +713,7 @@
                                     "optional": true
                         }
             }
-        };
+};
 
         const webActivitySelect = document.getElementById('webActivity');
         const dynamicFields = document.getElementById('dynamicFields');
@@ -733,13 +733,26 @@
                 const fieldsHTML = [];
 
                 if (config.campaign) {
-                    fieldsHTML.push(createField('campaign', config.campaign));
+                    fieldsHTML.push(createField('campaign', {
+                        ...config.campaign,
+                        "optional": true
+                    }));
                 }
-                if (config.term) {
-                    fieldsHTML.push(createField('term', config.term));
-                }
+                // Always show utm_term, but keep it optional for every activity.
+                // Paid activities retain their configured "Keyword" label.
+                const termConfig = config.term || {
+                    "label": "UTM Term",
+                    "placeholder": "optional_term"
+                };
+                fieldsHTML.push(createField('term', {
+                    ...termConfig,
+                    "optional": true
+                }));
                 if (config.content) {
-                    fieldsHTML.push(createField('content', config.content));
+                    fieldsHTML.push(createField('content', {
+                        ...config.content,
+                        "optional": true
+                    }));
                 }
 
                 dynamicFields.innerHTML = `<div class="dynamic-inputs">${fieldsHTML.join('')}</div>`;
